@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cryptocurrency Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: #000;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            overflow-y: auto;
+        }
+        .calculator-container {
+            background-color: #111;
+            padding: 20px;
+            border-radius: 15px;
+            width: 350px;
+            box-shadow: 0px 0px 40px rgba(0, 170, 255, 0.4);
+            text-align: center;
+            position: relative;
+        }
+        .top-bar {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            z-index: 10;
+        }
+        .back-button {
+            font-size: 36px;
+            color: #4c8cff;
+            cursor: pointer;
+        }
+        .back-button:hover {
+            color: white;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            background-color: #222;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #1a1a1a;
+            border-radius: 10px;
+        }
+        .trade-button {
+            margin-top: 20px;
+            padding: 12px;
+            background-color: #4c8cff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            width: 180px;
+            cursor: pointer;
+        }
+        .trade-button:hover {
+            background-color: #0099cc;
+        }
+        .market-button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #4c8cff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .market-button:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator-container">
+        <div class="top-bar">
+            <span class="back-button" onclick="goToHome()">
+                <i class="fa-solid fa-circle-xmark"></i>
+            </span>
+        </div>
+        <h2>Cryptocurrency Calculator</h2>
+        <div class="input-group">
+            <label for="crypto">Cryptocurrency:</label>
+            <select id="crypto" onchange="updateMarketPrice()">
+                <option value="bitcoin">BTC</option>
+                <option value="dogecoin">DOGE</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label for="deposit">Deposit ($):</label>
+            <input type="number" id="deposit" min="10" max="100000" step="10" value="5000" oninput="syncSlider('deposit')" />
+            <input type="range" id="deposit-slider" min="10" max="100000" step="10" value="5000" oninput="syncInput('deposit')" />
+        </div>
+        <div class="input-group">
+            <label for="leverage">Leverage (x):</label>
+            <input type="number" id="leverage" min="1" max="100" value="10" oninput="syncSlider('leverage')" />
+            <input type="range" id="leverage-slider" min="1" max="100" value="10" oninput="syncInput('leverage')" />
+        </div>
+        <div class="input-group">
+            <label for="entry">Opening Price ($):</label>
+            <input type="number" id="entry" min="1" max="100000" value="20000" oninput="syncSlider('entry')" />
+            <input type="range" id="entry-slider" min="1" max="100000" value="20000" oninput="syncInput('entry')" />
+            <button class="market-button" id="marketButton" onclick="setToMarketPrice()">Market</button>
+        </div>
+        <div class="input-group">
+            <label for="stopLoss">Loss in ($):</label>
+            <input type="number" id="stopLoss" min="1" max="100000" value="1000" oninput="syncSlider('stopLoss')" />
+            <input type="range" id="stopLoss-slider" min="1" max="100000" value="1000" oninput="syncInput('stopLoss')" />
+        </div>
+        <div class="input-group">
+            <label for="takeProfit">Income in ($):</label>
+            <input type="number" id="takeProfit" min="1" max="100000" value="2000" oninput="syncSlider('takeProfit')" />
+            <input type="range" id="takeProfit-slider" min="1" max="100000" value="2000" oninput="syncInput('takeProfit')" />
+        </div>
+        <div class="results">
+            <p>Coin Quantity: <span id="coinQuantity">0.000000</span></p>
+            <p>Take-Profit Price: $<span id="takeProfitPrice">0.00</span></p>
+            <p>Stop-Loss Price: $<span id="stopLossPrice">0.00</span></p>
+        </div>
+        <button class="trade-button" onclick="trade()">Calculate position</button>
+    </div>
+
+    <script>
+        let currentMarketPrice = 0;
+        let marketMode = false;
+
+        async function updateMarketPrice() {
+            const crypto = document.getElementById('crypto').value;
+            const url = `https://api.coingecko.com/api/v3/simple/price?ids=${crypto}&vs_currencies=usd`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                currentMarketPrice = data[crypto]?.usd || 1;
+            } catch (error) {
+                console.error('Error fetching market price:', error);
+            }
+        }
+
+        function setToMarketPrice() {
+            const entryInput = document.getElementById('entry');
+            const entrySlider = document.getElementById('entry-slider');
+            const marketButton = document.getElementById('marketButton');
+
+            marketMode = !marketMode; // Toggle market mode
+            if (marketMode) {
+                entryInput.value = currentMarketPrice;
+                entrySlider.value = currentMarketPrice;
+                entryInput.disabled = true;
+                entrySlider.disabled = true;
+                marketButton.textContent = "Market (Active)";
+            } else {
+                entryInput.disabled = false;
+                entrySlider.disabled = false;
+                marketButton.textContent = "Market";
+            }
+            calculateResults();
+        }
+
+        function syncSlider(inputId) {
+            if (marketMode && inputId === 'entry') return; // Prevent syncing if Market is active for Opening Price
+            const slider = document.getElementById(`${inputId}-slider`);
+            const input = document.getElementById(inputId);
+            slider.value = input.value;
+            calculateResults();
+        }
+
+        function syncInput(inputId) {
+            if (marketMode && inputId === 'entry') return; // Prevent syncing if Market is active for Opening Price
+            const slider = document.getElementById(`${inputId}-slider`);
+            const input = document.getElementById(inputId);
+            input.value = slider.value;
+            calculateResults();
+        }
+
+        function calculateResults() {
+            const deposit = parseFloat(document.getElementById('deposit').value) || 0;
+            const leverage = parseFloat(document.getElementById('leverage').value) || 0;
+            const openingPrice = parseFloat(document.getElementById('entry').value) || 0;
+            const stopLoss = parseFloat(document.getElementById('stopLoss').value) || 0;
+            const takeProfit = parseFloat(document.getElementById('takeProfit').value) || 0;
+
+            if (deposit > 0 && leverage > 0 && openingPrice > 0) {
+                const coinQuantity = (deposit * leverage) / openingPrice;
+                const takeProfitPrice = Math.max(0, openingPrice + takeProfit / coinQuantity);
+                const stopLossPrice = Math.max(0, openingPrice - stopLoss / coinQuantity);
+
+                document.getElementById('coinQuantity').textContent = coinQuantity.toFixed(6);
+                document.getElementById('takeProfitPrice').textContent = takeProfitPrice.toFixed(2);
+                document.getElementById('stopLossPrice').textContent = stopLossPrice.toFixed(2);
+            }
+        }
+
+        function goToHome() {
+            window.location.href = 'index1.html';
+        }
+
+        function trade() {
+            window.location.href = 'self.html';
+        }
+
+        window.onload = updateMarketPrice;
+    </script>
+</body>
+</html>

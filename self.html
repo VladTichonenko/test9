@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Blocks</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;         
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .choose-container {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .block {
+            width: 150px;
+            height: 100px;
+            background-color: transparent;
+            border: 2px solid #4c8cff;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #1e1e1e;
+            color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+        .close-modal {
+            background-color: #4c8cff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        .close-modal:hover {
+            background-color: #357ae8;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            z-index: 2;
+        }
+
+        .back-button {
+            cursor: pointer;
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #4c8cff;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        .back-button:hover {
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 65px;
+            background-color: #1e1e1e;
+            border-top: 2px solid #4c8cff;
+        }
+
+        .nav-item {
+            color: #4c8cff;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .nav-item.active {
+            color: #ffffff;
+        }
+
+        .nav-item:hover {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <span class="back-button" onclick="goToHome()"><i class="fa-solid fa-circle-xmark"></i></span>
+    </div>
+
+    <div class="choose-container">
+        Calculation for position №___
+        <br>
+        Opening orders
+    </div>
+
+    <div class="grid">
+        <div class="block">Trading - Spot</div>
+        <div class="block">Trading - Leverage</div>
+        <div class="block">Option</div>
+        <div class="block">Futures</div>
+        <div class="block">Staking</div>
+        <div class="block">Liquidity Mining</div>
+    </div>
+
+    <div class="modal" id="featureModal">
+        <div class="modal-content">
+            <div id="modalText"></div>
+            <button class="close-modal" id="closeFeatureModal">Trade</button>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="nav-item"><i class="fa-solid fa-house" id="home-icon"></i></div>
+        <div class="nav-item" id="open-chart"><i class="fa-solid fa-chart-line"></i></div>
+        <div class="nav-item" id="open-search"><i class="fa-regular fa-newspaper"></i></div>
+        <div class="nav-item" id="folow"><i class="fa-solid fa-star"></i></div>
+    </nav>
+
+    <script>
+        const modal = document.getElementById('featureModal');
+        const modalText = document.getElementById('modalText');
+        const closeFeatureModal = document.getElementById('closeFeatureModal');
+
+        const featureContent = {
+            "Trading - Spot": `
+                <p style="font-size: 20px; font-weight: bold;">Prewiev</p>
+                <p>Position size: $10,000</p>
+                <p>Profit: price change to 103400</p>
+                <p>Loss: price change to 89300</p>
+            `,
+            "Trading - Leverage": `
+                <p style="font-size: 20px; font-weight: bold;">Prewiev</p>
+                 <p>Position size: $10,000</p>
+                <p>Profit: price change to 94940</p>
+                <p>Loss: price change to 93530</p>
+            `,
+            "Option": `
+                <p style="font-size: 20px; font-weight: bold;">Preview</p>
+                <p>Position size: $10,000</p>
+                <p>Profit: price above $100,000 by 12/06/2024</p>
+                <p>Loss: price below $100,000 by 12/06/2024</p>
+            `,
+"Futures": `
+                <p style="font-size: 20px; font-weight: bold;">Preview</p>
+                <p>Position size: $10,000</p>
+                <p>Profit: price above $103,000 by 11/29/2024</p>
+                <p>Loss: price below $103,000 by 11/29/2024</p>
+            `,
+"Staking": `
+                <p style="font-size: 20px; font-weight: bold;">Preview</p>
+                <p>Position size: $10,000</p>
+                <p>APR: 3.3-6.9%</p>
+                <p>Profit: $1.67/day</p>
+            `,
+
+            "Liquidity Mining": `
+                <p style="font-size: 45px;"><i class="fa-solid fa-face-frown"></i></p>
+                <p style="width: 250px;">Coming soon...</p>
+            `
+        };
+
+        document.querySelectorAll('.block').forEach(block => {
+            block.addEventListener('click', () => {
+                const content = featureContent[block.textContent.trim()] || "<p>Информация недоступна.</p>";
+                modalText.innerHTML = content;
+                modal.style.display = 'flex';
+            });
+        });
+
+        closeFeatureModal.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        function goToHome() {
+            window.location.href = 'index1.html';
+        }
+
+        document.getElementById('home-icon').addEventListener('click', () => {
+            window.location.href = 'index1.html';
+        });
+
+        document.getElementById('open-chart').addEventListener('click', () => {
+            window.location.href = 'Chart.html';
+        });
+
+        document.getElementById('open-search').addEventListener('click', () => {
+            window.location.href = 'graf.html';
+        });
+
+        document.getElementById('folow').addEventListener('click', () => {
+            window.location.href = 'folow.html';
+        });
+    </script>
+</body>
+</html>

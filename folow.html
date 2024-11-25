@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial="content">
+    <title>Crypto Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .container {
+            width: 90%;
+            margin: 0 auto;
+            text-align: center;
+            padding-bottom: 80px;
+        }
+
+        .slider {
+    position: relative;
+    max-width: 100%; /* Убедитесь, что слайдер занимает всю ширину родительского элемента */
+    margin: 20px auto;
+    height: 300px; /* Задайте фиксированную высоту для слайдера */
+    overflow: hidden;
+    border-radius: 15px;
+}
+
+.slides img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Это заставит изображение заполнять контейнер, сохраняя пропорции */
+    border-radius: 15px;
+}
+
+
+        .slides {
+            display: flex;
+            width: 300%;
+            transition: transform 0.5s ease;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 2rem;
+        }
+
+        .crypto-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .crypto-table th, .crypto-table td {
+            padding: 15px;
+            text-align: left;
+        }
+
+        .crypto-table th {
+            background-color: #292929;
+            color: #ffffff;
+        }
+
+        .crypto-table tr:nth-child(even) {
+            background-color: #2a2a2a;
+        }
+
+        .crypto-table tr:nth-child(odd) {
+            background-color: #1e1e1e;
+        }
+
+        .crypto-table tr:hover {
+            background-color: #333333;
+        }
+
+        .red {
+            color: #ff4d4d;
+        }
+
+        .green {
+            color: #4caf50;
+        }
+
+        .add-more-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4c8cff;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-more-btn:hover {
+            background-color: #1e90ff;
+        }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 65px;
+            background-color: #1e1e1e;
+            border-top: 2px solid #4c8cff;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            color: #4c8cff;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .nav-item.active {
+            color: #ffffff;
+        }
+
+        .nav-item:hover {
+            color: #ffffff;
+        }
+
+        .trash-icon {
+            cursor: pointer;
+            color: #ff4d4d;
+        }
+
+        .delete-icon {
+            cursor: pointer;
+            color: #ff4d4d;
+            display: none; /* Initially hidden */
+        }
+
+        .delete-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1e1e1e;
+            color: #ffffff;
+            border: 1px solid #4c8cff;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            z-index: 1000;
+            width: 200px;
+        }
+
+        .dialog-buttons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.dialog-buttons button {
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    flex: 1;  /* This makes the buttons stretch to fill the row */
+    margin: 0 5px; /* Adjust space between the buttons */
+}
+
+
+        .delete-btn {
+            background-color: #ff4d4d;
+            color: white;
+        }
+
+        .cancel-btn {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        
+/* Стили для модального окна */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  .modal-content {
+    background-color: #1e1e1e;
+    color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  }
+  .close-modal {
+    background-color: #4c8cff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+  }
+  .close-modal:hover {
+    background-color: #357ae8;
+  }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="slider">
+            <div class="slides">
+                <img src="11.jpg" alt="Photo 1">
+                <img src="rbk.jpg" alt="Photo 2">
+                <img src="p.jpg" alt="Photo 3">
+            </div>
+        </div>
+        
+        <table class="crypto-table">
+            <thead>
+                <tr>
+                    <th><i class="fa-solid fa-trash-can trash-icon" id="toggle-delete-mode"></i></th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>(24h)</th>
+                </tr>
+            </thead>
+            <tbody id="crypto-data">
+                <!-- Data will load here -->
+            </tbody>
+        </table>
+
+        <!-- Add More Button -->
+        <button class="add-more-btn" id="add-more"><i class="fa-solid fa-plus"></i> Add More</button>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="delete-dialog" id="delete-dialog">
+        <p>Are you sure you want to delete this item?</p>
+        <div class="dialog-buttons">
+            <button class="delete-btn" id="confirm-delete">Delete</button>
+            <button class="cancel-btn" id="cancel-delete">Cancel</button>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="nav-item" id="home-icon"><i class="fa-solid fa-house"></i></div>
+        <div class="nav-item" id="open-chart"><i class="fa-solid fa-chart-line"></i></div>
+        <div class="nav-item" id="open-search"><i class="fa-regular fa-newspaper"></i></div>
+        <div class="nav-item active"><i class="fa-solid fa-star"></i></div>
+    </nav>
+
+    <!-- Модальное окно -->
+<div class="modal" id="featureModal">
+    <div class="modal-content">
+        <i class="fa-solid fa-face-frown" style="font-size: 36px; color: white; margin-bottom: 10px;"></i>
+        <p id="modalText">Comming soon...</p>
+        <button class="close-modal" id="closeFeatureModal">Close</button>
+    </div>
+</div>
+
+
+    <script>
+        // Slider Logic
+        let index = 0;
+        const slides = document.querySelector('.slides');
+        const slideCount = 3;
+
+        setInterval(() => {
+            index = (index + 1) % slideCount;
+            slides.style.transform = `translateX(-${index * 100}%)`;
+        }, 3000);
+
+        // Allowed cryptocurrencies by symbol
+        const allowedCoins = ['btc', 'usdt', 'doge', 'bnb', 'eth'];
+
+        // Fetch Crypto Data
+        const fetchCryptoData = async () => {
+            try {
+                const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false');
+                const data = await response.json();
+
+                const tableBody = document.getElementById('crypto-data');
+                tableBody.innerHTML = ''; // Clear previous data
+
+                data
+                    .filter(coin => allowedCoins.includes(coin.symbol.toLowerCase())) // Filter only allowed coins
+                    .forEach((coin, index) => {
+                        const changeClass = coin.price_change_percentage_24h >= 0 ? 'green' : 'red';
+
+                        const row = `
+                            <tr>
+                                <td><i class="fa-solid fa-times delete-icon"></i></td>
+                                <td>${coin.name} (${coin.symbol.toUpperCase()})</td>
+                                <td>$${coin.current_price.toLocaleString()}</td>
+                                <td class="${changeClass}">${coin.price_change_percentage_24h.toFixed(2)}%</td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+            } catch (error) {
+                console.error('Error fetching crypto data:', error);
+            }
+        };
+
+        fetchCryptoData();
+        setInterval(fetchCryptoData, 60000); // Update every minute
+
+       
+
+        // Toggle delete mode
+        document.getElementById('toggle-delete-mode').addEventListener('click', () => {
+            const deleteIcons = document.querySelectorAll('.delete-icon');
+            deleteIcons.forEach(icon => {
+                icon.style.display = icon.style.display === 'none' ? 'inline' : 'none';
+            });
+        });
+
+        // Show delete dialog
+        const showDeleteDialog = (row) => {
+            const overlay = document.getElementById('overlay');
+            const dialog = document.getElementById('delete-dialog');
+            overlay.style.display = 'block';
+            dialog.style.display = 'block';
+
+            // Handle delete confirmation
+            document.getElementById('confirm-delete').onclick = () => {
+                row.remove();
+                closeDialog();
+            };
+
+            // Handle cancel
+            document.getElementById('cancel-delete').onclick = closeDialog;
+        };
+
+        // Close dialog
+        const closeDialog = () => {
+            const overlay = document.getElementById('overlay');
+            const dialog = document.getElementById('delete-dialog');
+            overlay.style.display = 'none';
+            dialog.style.display = 'none';
+        };
+
+        // Add click listeners to delete icons
+        document.addEventListener('click', event => {
+            if (event.target.classList.contains('delete-icon')) {
+                const row = event.target.closest('tr');
+                showDeleteDialog(row);
+            }
+        });
+
+        document.getElementById('open-chart').addEventListener('click', function() {
+    window.location.href = 'Chart.html';
+});
+
+document.getElementById('home-icon').addEventListener('click', function() {
+    window.location.href = 'index1.html';
+});
+
+document.getElementById('open-search').addEventListener('click', function() {
+    window.location.href = 'graf.html';
+});
+
+
+// Обработчик для кнопки Add More
+document.getElementById('add-more').addEventListener('click', () => {
+    const modal = document.getElementById('featureModal');
+    modal.style.display = 'flex';
+});
+
+// Закрытие модального окна
+document.getElementById('closeFeatureModal').addEventListener('click', () => {
+    const modal = document.getElementById('featureModal');
+    modal.style.display = 'none';
+});
+
+// Сохранение данных из модального окна
+document.getElementById('saveFeature').addEventListener('click', () => {
+    const name = document.getElementById('cryptoName').value.trim();
+    const price = document.getElementById('cryptoPrice').value.trim();
+
+    if (name && price) {
+        const tableBody = document.getElementById('crypto-data');
+        const row = `
+            <tr>
+                <td><i class="fa-solid fa-times delete-icon"></i></td>
+                <td>${name}</td>
+                <td>$${parseFloat(price).toLocaleString()}</td>
+                <td class="green">0.00%</td>
+            </tr>
+        `;
+        tableBody.innerHTML += row;
+
+        // Очистить поля и закрыть модальное окно
+        document.getElementById('cryptoName').value = '';
+        document.getElementById('cryptoPrice').value = '';
+        document.getElementById('featureModal').style.display = 'none';
+    } else {
+        alert('Пожалуйста, заполните все поля!');
+    }
+});
+
+    </script>
+</body>
+</html>
